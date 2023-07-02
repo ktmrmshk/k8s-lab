@@ -35,3 +35,4 @@ spec:
     app: notebook
   ports:
     - port: 8888
+      nodePort: 30088
