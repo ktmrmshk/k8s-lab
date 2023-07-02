@@ -1,0 +1,37 @@
+# 1. $ eval $(minikube docker-env)
+# 2. $ docker pull jupyter/pyspark-notebook:latest
+# 3. add 'imagePullPolicy: IfNotPresent' in containers list
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyterlab
+  labels:
+    app: notebook
+
+spec:
+  template:
+    metadata:
+      name: jupyterlab
+      labels:
+        app: notebook
+    spec:
+      containers:
+        - name: jupyterlab
+          image: jupyter/pyspark-notebook:latest
+          imagePullPolicy: IfNotPresent
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notebook
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: serv-notebook
+spec:
+  type: NodePort
+  selector:
+    app: notebook
+  ports:
+    - port: 8888
