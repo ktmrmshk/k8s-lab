@@ -1,0 +1,68 @@
+# nfs server: 
+#   /etc/exports
+#     ```
+#     /data   192.168.0.0/16(rw,async,no_root_squash,no_subtree_check)
+#     ```
+#
+#
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv001
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  nfs:
+    server: 192.168.64.20
+    path: /data/pv001
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-001
+  labels:
+    app: web
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "slow"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kitbox
+  labels:
+    app: kitbox
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kitbox
+  template:
+    metadata:
+      name: kitbox
+      labels:
+        app: kitbox
+    spec:
+      volumes:
+        - name: kitbox-vol
+          persistentVolumeClaim:
+            claimName: pv-claim-001
+      containers:
+        - image: ghcr.io/ktmrmshk/kitabox_arm64:latest
+          command: ["/bin/sh"]
+          args: ["-c", "sleep 10000000"]
+          name: kitbox
+          volumeMounts:
+            - name: kitbox-vol
+              mountPath: /data
